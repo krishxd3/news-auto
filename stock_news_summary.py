@@ -60,3 +60,6 @@ def run_summary():
 # Run the script
 if __name__ == "__main__":
     run_summary()
+subprocess.run(["git", "add", OUTPUT_FILE])
+subprocess.run(["git", "commit", "-m", "Update latest news"])
+subprocess.run(["git", "push"])
