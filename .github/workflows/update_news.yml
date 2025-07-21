@@ -22,7 +22,8 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run news summary script
-        env:
-          NEWSDATA_API_KEY: ${{ secrets.NEWSDATA_API_KEY }}
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-        run: python stock_news_summary.py
+       env:
+  NEWSDATA_API_KEY: ${{ secrets.NEWSDATA_API_KEY }}
+  OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
