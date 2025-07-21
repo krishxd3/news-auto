@@ -1,5 +1,3 @@
-# 🔁 stock_news_summary.py
-
 import requests
 import json
 import subprocess
@@ -9,15 +7,19 @@ from datetime import datetime
 # ✅ Load API keys from GitHub Secrets
 NEWSDATA_API_KEY = os.getenv("NEWSDATA_API_KEY")
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+GH_TOKEN = os.getenv("GH_TOKEN")  # GitHub Token for push
 
-# ✅ Output HTML file location (used for GitHub Pages)
-OUTPUT_FILE = "docs/latest_news.html"  # Make sure you enable GitHub Pages on /docs folder
+# ✅ Output file
+OUTPUT_FILE = "docs/latest_news.html"
+REPO = "krishxd3/news-auto"  # Change if repo name is different
+BRANCH = "main"
 
-# ✅ Create "docs" folder if it doesn't exist
+# ✅ Create docs folder if not exists
 os.makedirs("docs", exist_ok=True)
 
-# 🔹 Step 1: Fetch latest Indian stock news headlines
+# ✅ Step 1: Fetch latest stock market news from India
 def fetch_news():
+    print("📡 Fetching stock market news...")
     url = f"https://newsdata.io/api/1/latest?apikey={NEWSDATA_API_KEY}&q=Stock Market&country=in&language=en&timezone=Asia/Kolkata"
     response = requests.get(url)
     if response.status_code == 200:
@@ -26,11 +28,11 @@ def fetch_news():
         print("❌ Failed to fetch news:", response.status_code)
         return []
 
-# 🔹 Step 2: Summarize news article using DeepSeek via OpenRouter
+# ✅ Step 2: Summarize using DeepSeek
 def summarize_with_deepseek(text):
     prompt = (
-        f"Summarize this Indian stock market news in 2-3 lines, "
-        f"and describe its likely impact on the Indian stock market or specific stock:\n\n{text}"
+        f"Summarize this Indian stock market news in 2-3 lines "
+        f"and describe its impact on Indian stock market or specific stocks:\n\n{text}"
     )
     headers = {
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
@@ -48,52 +50,36 @@ def summarize_with_deepseek(text):
         print(response.text)
         return "❌ Could not summarize"
 
-# 🔹 Step 3: Create clean HTML output
+# ✅ Step 3: Generate HTML file
 def generate_html(news_items):
-    print("📝 Generating HTML output...")
-    now = datetime.now().strftime("%d %b %Y, %I:%M %p")
-
+    print("📝 Generating HTML file...")
+    now = datetime.now().strftime("%d %B %Y, %I:%M %p")
     html = f"""
     <html>
     <head>
-        <title>📈 Latest Stock Market News Summary</title>
+        <meta charset="UTF-8">
+        <title>📈 Latest Indian Stock Market News</title>
         <style>
-            body {{
-                font-family: Arial, sans-serif;
-                padding: 20px;
-                background: #f9f9f9;
-            }}
-            h1 {{
-                color: #234155;
-            }}
-            .news-block {{
-                background: white;
-                margin: 20px 0;
-                padding: 15px;
-                border-radius: 8px;
-                box-shadow: 0 0 8px rgba(0,0,0,0.1);
-            }}
-            .timestamp {{
-                font-size: 14px;
-                color: #777;
-            }}
+            body {{ font-family: sans-serif; padding: 20px; background: #f8f8f8; }}
+            .news-block {{ background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 20px; }}
+            .timestamp {{ color: #666; font-size: 0.9em; }}
         </style>
     </head>
     <body>
-        <h1>📰 Indian Stock Market News (Auto-Updating)</h1>
-        <div class="timestamp">Last updated: {now}</div>
+        <h1>📰 Latest Indian Stock Market News Summary</h1>
+        <div class="timestamp">Last Updated: {now}</div>
     """
 
-    for i, item in enumerate(news_items[:5], 1):  # Limit to top 5
-        title = item.get("title", "No title")
-        description = item.get("description", "")
+    for i, article in enumerate(news_items[:5], 1):
+        title = article.get("title", "No Title")
+        description = article.get("description", "")
         full_text = f"{title}. {description}"
         summary = summarize_with_deepseek(full_text)
 
         html += f"""
         <div class="news-block">
             <h3>{i}. {title}</h3>
-            <p><strong>🧠 Summary & Impact:</strong><br>{summary}</p>
+            <p><strong>Impact Summary:</strong><br>{summary}</p>
         </div>
         """
 
@@ -101,22 +87,26 @@ def generate_html(news_items):
 
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         f.write(html)
+    
+    print(f"✅ HTML saved to → {OUTPUT_FILE}")
 
-    print(f"✅ HTML saved to: {OUTPUT_FILE}")
-
-# 🔹 Step 4: Auto commit & push to GitHub (for GitHub Pages)
+# ✅ Step 4: Git Commit & Push with Token Auth
 def git_commit_push():
-    print("📤 Git committing & pushing updates...")
-    subprocess.run(["git", "config", "--global", "user.name", "AutoBot"])
-    subprocess.run(["git", "config", "--global", "user.email", "newsbot@example.com"])
+    print("📤 Committing and pushing file to GitHub...")
+    subprocess.run(["git", "config", "--global", "user.name", "NewsAutoBot"])
+    subprocess.run(["git", "config", "--global", "user.email", "news@bot.com"])
+    
+    # Replace origin URL with GH_TOKEN to push from GitHub Action
+    remote_url = f"https://x-access-token:{GH_TOKEN}@github.com/{REPO}.git"
+    subprocess.run(["git", "remote", "set-url", "origin", remote_url])
+    
     subprocess.run(["git", "add", OUTPUT_FILE])
-    subprocess.run(["git", "commit", "-m", "🔄 Auto update news summary"])
-    subprocess.run(["git", "push"])
-    print("✅ Git push complete.")
+    subprocess.run(["git", "commit", "-m", "🔁 Auto update news summary"])
+    subprocess.run(["git", "push", "origin", BRANCH])
+    print("✅ Push completed!")
 
-# 🔹 Main driver
+# ✅ Main function
 def main():
-    print("📡 Fetching news...")
     articles = fetch_news()
     if articles:
         generate_html(articles)
@@ -126,3 +116,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
