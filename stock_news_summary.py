@@ -1,5 +1,6 @@
 import requests
 import json
+import subprocess
 
 # ✅ Your API KEYS
 NEWSDATA_API_KEY = "pub_51c51defabfb4c8694cbb1a768e955b6"
