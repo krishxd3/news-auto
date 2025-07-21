@@ -96,14 +96,16 @@ def git_commit_push():
     subprocess.run(["git", "config", "--global", "user.name", "NewsAutoBot"])
     subprocess.run(["git", "config", "--global", "user.email", "news@bot.com"])
     
-    # Replace origin URL with GH_TOKEN to push from GitHub Action
-    remote_url = f"https://x-access-token:{GH_TOKEN}@github.com/{REPO}.git"
-    subprocess.run(["git", "remote", "set-url", "origin", remote_url])
-    
-    subprocess.run(["git", "add", OUTPUT_FILE])
-    subprocess.run(["git", "commit", "-m", "🔁 Auto update news summary"])
-    subprocess.run(["git", "push", "origin", BRANCH])
-    print("✅ Push completed!")
+    GH_TOKEN = os.getenv("GH_TOKEN")
+remote_url = f"https://x-access-token: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@github.com/krishxd3/news-auto.git"
+
+subprocess.run(["git", "config", "--global", "user.name", "NewsAutoBot"])
+subprocess.run(["git", "config", "--global", "user.email", "news@bot.com"])
+subprocess.run(["git", "remote", "set-url", "origin", remote_url])
+subprocess.run(["git", "add", OUTPUT_FILE])
+subprocess.run(["git", "commit", "-m", "🔁 Auto update news summary"])
+subprocess.run(["git", "push", "origin", "main"])
+
 
 # ✅ Main function
 def main():
